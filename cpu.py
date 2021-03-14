@@ -24,11 +24,11 @@ def exec_program(comp, program):
             running = False
         elif command == "push":
             log(f"pushing {program[ip+2]} to register {program[ip+1]}")
-            comp.regs[program[ip+1]] += program[ip+2]
+            comp.regs[program[ip+1]] = program[ip+2]
         elif command == "pop":
             popped = comp.regs[program[ip+1]]
             comp.regs[program[ip+1]] = 0
-            log(f"Pop the value {popped} to register {program[ip+1]}")
+            log(f"Pop the value {popped} of register {program[ip+1]}")
         elif command == "add":
             first = comp.regs[program[ip+1]]
             second = comp.regs[program[ip+2]]
@@ -36,7 +36,7 @@ def exec_program(comp, program):
             comp.regs[program[ip+1]] = 0 
             result = first + second
             log(f"Add {first} to {second} and push it to register {program[ip+2]}")
-            comp.regs[program[ip+2]].append(result)
+            comp.regs[program[ip+2]] = result
         elif command == "goto":
             ip = program[ip+1]
             log(f"We now at {ip}")
@@ -65,7 +65,7 @@ class computer:
 
 
 
-program = ["push", "C", 20, "push", "A", 5, "equal", "A", "C", "goto", 3, "halt"]
+program = ["push", "C", 20,  "move", "A", "B", "push", "A", 5, "add", "B", "A", "equal", "A", "C", "goto", 3, "halt"]
 
 
 mcp = computer()
