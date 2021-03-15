@@ -12,8 +12,7 @@ def log(message):
 
 def exec_program(comp, program):
     ip = 0
-    running = True
-    while running:
+    while True:
         try:
             command = program[ip]
         except IndexError:
@@ -21,7 +20,7 @@ def exec_program(comp, program):
             break
         if command == "halt":
             log("halt the program")
-            running = False
+            break
         elif command == "push":
             log(f"pushing {program[ip+2]} to register {program[ip+1]}")
             comp.regs[program[ip+1]] = program[ip+2]
