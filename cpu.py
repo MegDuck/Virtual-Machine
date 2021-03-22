@@ -6,11 +6,23 @@ YELLOW=u"\u001b[33m"
 RESET=u"\u001b[0m"
 
 DEBUG = True
+DEBUG_FILE = False
+
+if DEBUG_FILE == True:
+    import datetime
+    log = open("emulator.log", "a")
+    now = datetime.datetime.now()
+    log.write(now.strftime("%d-%m-%Y %H:%M") + "\n")
+    log.close()
+
 
 def log(message, ip):
-    if DEBUG:
+    if DEBUG and DEBUG_FILE != True:
         print(f"[{YELLOW}{hex(ip)}{RESET}]: " + message)
-
+    elif DEBUG and DEBUG_FILE:
+        log = open("emulator.log", "a")
+        log.write(f"[{hex(ip)}]: {message}\n")
+        log.close()
 
 def exec_program(comp, program):
     ip = 0x0
@@ -39,10 +51,10 @@ def exec_program(comp, program):
             result = first + second
             log(f"add {first} to {second} and push it to register {program[ip+2]}", ip)
             comp.regs[program[ip+0x02]] = result
-            ip += 0x01
+           
         elif command == "goto":
             ip = program[ip+0x01]
-            log(f"We now at {ip}", ip)
+            log(f"We now at {hex(ip)}", ip)
             continue
         elif command == "equal":
             first = comp.regs[program[ip+0x01]]
@@ -78,8 +90,7 @@ def exec_program(comp, program):
                 log(f"putting {output}\n", ip)
 
             sys.stdout.write(str(output))
-        ip += 0x01
-        
+        ip += 0x01        
 
 
 
@@ -93,11 +104,54 @@ class api:
     api for programming in this cpu.
     """
 
-    def __init__(self):
+    def __init__(self, pc):
         self.program = []
     def put(self, message : str):
         """
+        Message out to stdout(or register)
         """
+        self.program.append("put")
+        self.program.append(message)
+    def move(self, register : str, register2 : str):
+        """
+        moving value of register1 to register2
+        """
+        self.program.append("move")
+        self.program.append(register)
+        self.program.append(register2)
+    def equal(self, register1 : str, register2 : str):
+        """
+        check equal of register1 to register2
+        """
+        self.program.append("equal")
+        self.program.append(register1)
+        self.program.append(register2)
+    def not_equal(self, register1 : str, register2 : str):
+        """
+        Check not equal of register1 to register2
+        """
+        self.program.append("not_equal")
+        self.program.append(register1)
+        self.program.append(register2)
+    def goto(self, ip : hex):
+        """
+        Goto шз
+        """
+        self.program.append("goto")
+        self.program.append(ip)
+    def halt(self):
+        self.program.append("halt")
+    def push(self, register1 : str, register2 : str):
+        self.program.append("push")
+        self.program.append(register1)
+        self.program.append(register2)
+    def pop(self, register : str):
+        self.program.append("pop")
+        self.program.append(register)
+    def add(self, register1 : str, register2 : str):
+        self.program.append("add")
+        self.program.append(register1)
+        self.program.append(register2)
 
 
 
