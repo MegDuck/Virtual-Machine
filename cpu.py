@@ -11,8 +11,8 @@ class computer:
 YELLOW=u"\u001b[33m"
 RESET=u"\u001b[0m"
 
-DEBUG = True
-DEBUG_FILE = True
+DEBUG = False
+DEBUG_FILE = False
 
 if sys.platform == 'win32':
     YELLOW=""
@@ -38,6 +38,10 @@ def exec_binary_program(mcp, program):
     while True:
         try:
             opcode = program[mcp.ip]
+            if isinstance(opcode, int) == False:
+                print("not correct type")
+                break
+
         except IndexError:
             print("Break. List of opcodes ended..")
             break
@@ -45,9 +49,11 @@ def exec_binary_program(mcp, program):
         
         value = opcode & 0x0FFF
 
-        subvalue = ( opcode & 0x0F00 ) >> 8
+        subvalue1 = ( opcode & 0x0F00 ) >> 8
 
         subvalue2 = ( opcode & 0x00F0 ) >> 4
+
+        subvalue3 = opcode & 0x00FF
         if command == 0x0 and value == 0x999:
             # break the program ( HALT )
             break 
@@ -58,26 +64,63 @@ def exec_binary_program(mcp, program):
         elif command == 0x2000:
             # add value of register `subvalue` to `subvalue2` ( ADD )
             try:
-                mcp.indexed_regs[subvalue] = mcp.indexed_regs[subvalue] + mcp.indexed_regs[subvalue2]
+                mcp.indexed_regs[subvalue1] = mcp.indexed_regs[subvalue1] + mcp.indexed_regs[subvalue2]
             except KeyError:
-                print("Use correct register")
+                print("error: use correct register")
                 break
         elif command == 0x3000:
-            # basic realization of "if". Skip next opcode, if `subvalue` ==
-            # `subvalue1`
+            # basic realization of "if". Skip next opcode, if `subvalue` == `subvalue1`
             try:
-                mcp.indexed
-
-        print(hex(value))
-        print(hex(command))
+                if mcp.indexed_regs[subvalue1] == mcp.indexed_regs[subvalue2]:
+                    # skip
+                    mcp.ip += 1
+            except KeyError:
+                print("error: use correct register")
+                break
+        elif command == 0x4000:
+            # move value of `subvalue` to `subvalue1`
+            try:
+                mcp.indexed_regs[subvalue1] = mcp.indexed_regs[subvalue2]
+            except KeyError:
+                print("error: use correct register")
+                break
+        elif command == 0x5000:
+            # print/put/cout etc...
+            
+            # read flag `0x0*00` and if true print integer in 0x00**
+            # if false print value of register 0x00**.
+            try:
+                
+                if opcode & 0x0F00 == 0x1:
+                    print(subvalue3)
+                else:
+                    print(mcp.indexed_regs[subvalue3])
+            except KeyError:
+                print("error: use correct register")
+                break
+        elif command == 0x6000:
+            try:
+                mcp.indexed_regs[subvalue1] += subvalue3
+            except KeyError:
+                print("error: use correct register")
+                break
+        if DEBUG == True:
+            print(hex(value))
+            print(hex(command))
         mcp.ip += 1
-
+        
 
 program = ["push", "C", 5,  "move", "A", "B", "push", "A", 5, "add", "B", "A",
         "equal", "A", "C", "goto", 10, "put", "Value from register A: ", "put",
         "A", "put", "move", "halt"]
-
-binary_program = ["", 0x2111, 0x2200]
+# 0x0999 - break
+# 0x1 - goto `ip`
+# 0x2 - add register1 value to register2 value and store in register1
+# 0x3 - if register1-value == register2-value skip next opcode
+# 0x4 - move value of register1(0x0*00) to register2(0x00*0)
+# 0x5 - print value of register or print integer
+# 0x6 - put integer(0x00**) to register(0x0*00)
+binary_program = [0x6120, 0x6205, 0x5002, 0x3120, 0x1001]
 
 mcp = computer()
 
